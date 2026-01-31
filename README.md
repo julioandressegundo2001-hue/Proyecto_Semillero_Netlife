@@ -326,4 +326,19 @@ Se implementó un esquema en SQLite para la gestión de "Personas". Cada perfil 
 
     if __name__ == "__main__":
     ejecutar_demo()
+
+# 🎓 Conclusiones del Proyecto
+
+**1. Eficacia de la Arquitectura de Agentes** El uso de agentes contrapuestos (Cliente vs. Bot) demuestra que es posible automatizar el testing de servicios sin intervención humana. Al asignar roles específicos mediante SystemMessage, el sistema logra una simulación de "teatro lógico" donde cada IA respeta sus fronteras operativas: una centrada en la resolución (Bot) y otra en la experiencia subjetiva (Cliente).
+
+**2. Gestión de Contexto y Memoria** La implementación de self.historial mediante objetos de LangChain resalta la importancia de la memoria conversacional. Sin el almacenamiento secuencial de los HumanMessage, la interacción perdería coherencia. Esto demuestra que la potencia de un LLM no reside solo en su conocimiento preentrenado, sino en su capacidad de procesar el contexto acumulado durante la sesión.
+   
+**3. Parametrización mediante Persistencia** La integración de SQLite como fuente de verdad para los perfiles de usuario marca la diferencia entre un chatbot estático y un simulador dinámico. Conclusiones técnicas indican que:
+
+* Desacoplar los datos (SQL) de la lógica (Python) facilita la escalabilidad.
+* El uso de variables como ubicacion y tono permite evaluar el desempeño del modelo ante sesgos regionales y lingüísticos (modismos ecuatorianos).
+   
+**4. Control de Estocasticidad (Temperatura)** El ajuste diferenciado de la temperature en las instancias de ChatGoogleGenerativeAI revela un hallazgo crítico:Una temperatura baja ($0.5$) es vital para agentes de soporte que deben seguir protocolos.Una temperatura alta ($0.7$) es necesaria para agentes que simulan humanos, permitiendo una mayor expresividad y realismo en la queja o consulta.
+
+**5. Evaluación Automatizada (Feedback Sintético)** Aunque la función evaluar_bot utiliza actualmente una lógica simple, establece la base para sistemas de Auto-QA. La capacidad del agente cliente para "juzgar" al bot al final de la interacción abre la puerta a procesos de mejora continua donde la IA se entrena a sí misma basándose en métricas de satisfacción generadas sintéticamente.
    
