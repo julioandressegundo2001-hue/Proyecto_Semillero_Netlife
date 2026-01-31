@@ -41,7 +41,7 @@ Implementar arquitecturas de Agentes: Configurar dos instancias de LLM con roles
 
 # 💻 Tecnologías Utilizadas
 
-**Core**: Python 3.x
+**Core**: Python 3.12.6
 
 **IA Orchestrator:** LangChain (Core, Google GenAI)
 
