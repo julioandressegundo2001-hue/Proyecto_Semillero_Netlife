@@ -98,3 +98,223 @@ Se implementó un esquema en SQLite para la gestión de "Personas". Cada perfil 
 **Ejecutar script**
 
     python simulador_soporte.py
+
+# Explicacion del Codigo 
+** Importar Librerías 📚**
+
+    import os
+    import sqlite3
+    import random
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_core.messages import SystemMessage, HumanMessage
+
+* **sqlite3** entrega el contexto (quién es el cliente).
+
+* **os** activa el permiso para usar la IA.
+
+* **SystemMessage** le da personalidad a los agentes.
+
+* **ChatGoogleGenerativeAI** genera el diálogo.
+
+* **HumanMessage** mantiene el hilo de la conversación.
+  
+
+# **1. Configuración de Entorno**
+
+    os.environ["GOOGLE_API_KEY"] = ""
+# **2. Base de Datos de Perfiles**
+
+    def inicializar_bd():
+        conn = sqlite3.connect("clientes.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS perfiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tono TEXT,
+            intencion TEXT,
+            nivel_conocimiento TEXT,
+            personalidad TEXT,
+            ubicacion TEXT
+        )
+        """)
+        conn.commit()
+        return conn
+
+    
+    def insertar_perfil(conn, perfil):
+        cursor = conn.cursor()
+        cursor.execute("""
+        INSERT INTO perfiles (tono, intencion, nivel_conocimiento, personalidad, ubicacion)
+        VALUES (?, ?, ?, ?, ?)
+        """, (perfil["tono"], perfil["intencion"], perfil["nivel_conocimiento"], perfil["personalidad"], perfil["ubicacion"]))
+        conn.commit()
+
+        
+    def obtener_perfil_aleatorio(conn):
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM perfiles ORDER BY RANDOM() LIMIT 1")
+        fila = cursor.fetchone()
+        if fila:
+            return {
+                "tono": fila[1],
+                "intencion": fila[2],
+                "nivel_conocimiento": fila[3],
+                "personalidad": fila[4],
+                "ubicacion": fila[5]
+            }
+        else:
+            return None
+# **3. Clase SimuladorCliente**
+
+        class SimuladorCliente:
+    def __init__(self, perfil):
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
+        self.perfil = perfil
+        self.historial = []
+
+    def _crear_prompt_sistema(self):
+        return f"""
+        Actúa como un cliente real de servicios de telecomunicaciones en Ecuador.
+        Tu perfil es:
+        - Tono: {self.perfil['tono']}
+        - Conocimiento técnico: {self.perfil['nivel_conocimiento']}
+        - Personalidad: {self.perfil['personalidad']}
+        - Ubicación: {self.perfil['ubicacion']}
+        
+        Tu objetivo es {self.perfil['intencion']}. 
+        Usa modismos ecuatorianos ligeros si el tono es informal. No digas que eres una IA.
+        """
+
+    def generar_respuesta(self, mensaje_bot=None):
+        mensajes = [SystemMessage(content=self._crear_prompt_sistema())]
+        
+        for msg in self.historial:
+            mensajes.append(msg)
+
+        if mensaje_bot:
+            mensajes.append(HumanMessage(content=f"Bot dice: {mensaje_bot}"))
+        else:
+            mensajes.append(HumanMessage(content="Inicia la conversación saludando."))
+
+        respuesta = self.llm.invoke(mensajes)
+        self.historial.append(HumanMessage(content=f"Cliente: {respuesta.content}"))
+        return respuesta.content
+
+    def evaluar_bot(self):
+        puntuacion = random.randint(1, 5)
+        comentarios = {
+            1: "El servicio fue muy malo, no resolvió mi problema.",
+            2: "No quedé satisfecho, la atención fue confusa.",
+            3: "El bot respondió, pero podría mejorar en claridad.",
+            4: "Buena atención, aunque faltó un poco más de detalle.",
+            5: "Excelente servicio, rápido y claro. Muy satisfecho."
+        }
+        comentario = comentarios[puntuacion]
+        return puntuacion, comentario
+
+# **4. Clase BotSoporte**
+
+    class BotSoporte:
+    def __init__(self):
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.5)
+        self.historial = []
+
+    def _crear_prompt_sistema(self):
+        return """
+        Actúa como un agente de soporte de Netlife en Ecuador.
+        Tu objetivo es resolver dudas técnicas de clientes sobre cobertura y servicio.
+        Sé empático, claro y profesional. No digas que eres una IA.
+        Cuando el problema esté resuelto, finaliza la conversación con una despedida amable.
+        """
+
+    def generar_respuesta(self, mensaje_cliente):
+        mensajes = [SystemMessage(content=self._crear_prompt_sistema())]
+
+        for msg in self.historial:
+            mensajes.append(msg)
+
+        mensajes.append(HumanMessage(content=f"Cliente dice: {mensaje_cliente}"))
+
+        respuesta = self.llm.invoke(mensajes)
+        self.historial.append(HumanMessage(content=f"Bot: {respuesta.content}"))
+        return respuesta.content
+        
+# **5. Ejecución de la Simulación**
+
+    def ejecutar_demo():
+    conn = inicializar_bd()
+
+    Insertar perfiles de ejemplo si la tabla está vacía
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM perfiles")
+    if cursor.fetchone()[0] == 0:
+        perfiles_demo = [
+            {
+                "tono": "un poco impaciente pero educado",
+                "intencion": "averiguar por qué no hay cobertura en su sector de Guayaquil",
+                "nivel_conocimiento": "bajo",
+                "personalidad": "Persona mayor que prefiere explicaciones simples",
+                "ubicacion": "Guayaquil, Sauces"
+            },
+            {
+                "tono": "tranquilo",
+                "intencion": "consultar sobre la factura de internet",
+                "nivel_conocimiento": "medio",
+                "personalidad": "joven curioso",
+                "ubicacion": "Quito, La Floresta"
+            },
+            {
+                "tono": "molesto",
+                "intencion": "reclamar por la velocidad baja del servicio",
+                "nivel_conocimiento": "alto",
+                "personalidad": "profesional exigente",
+                "ubicacion": "Cuenca, Centro"
+            },
+            {
+                "tono": "amable",
+                "intencion": "preguntar cómo instalar el router",
+                "nivel_conocimiento": "bajo",
+                "personalidad": "persona mayor paciente",
+                "ubicacion": "Ambato, Ficoa"
+            }
+        ]
+        for p in perfiles_demo:
+            insertar_perfil(conn, p)
+
+   **Seleccionar perfil aleatorio**
+   
+        perfil = obtener_perfil_aleatorio(conn)
+        cliente = SimuladorCliente(perfil)
+        bot = BotSoporte()
+
+        print("--- INICIO DE SIMULACIÓN ---")
+        print(f"📌 Perfil seleccionado: {perfil}\n")
+
+        # Cliente inicia
+        frase_inicial = cliente.generar_respuesta()
+        print(f"👤 [CLIENTE]: {frase_inicial}\n")
+
+        # Bot responde dinámicamente
+        respuesta_bot = bot.generar_respuesta(frase_inicial)
+        print(f"🤖 [BOT NETLIFE]: {respuesta_bot}\n")
+
+        # Cliente reacciona
+        reaccion_cliente = cliente.generar_respuesta(respuesta_bot)
+        print(f"👤 [CLIENTE]: {reaccion_cliente}\n")
+
+        # Bot razona otra vez
+        respuesta_bot2 = bot.generar_respuesta(reaccion_cliente)
+        print(f"🤖 [BOT NETLIFE]: {respuesta_bot2}\n")
+
+        # Cliente reacciona nuevamente
+        reaccion_final_cliente = cliente.generar_respuesta(respuesta_bot2)
+        print(f"👤 [CLIENTE]: {reaccion_final_cliente}\n")
+
+        # Evaluación final del cliente
+        puntuacion, comentario = cliente.evaluar_bot()
+        print(f"⭐ [EVALUACIÓN CLIENTE]: {puntuacion}/5")
+        print(f"💬 [COMENTARIO]: {comentario}")
+
+    if __name__ == "__main__":
+    ejecutar_demo()
+   
