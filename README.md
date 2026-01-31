@@ -31,7 +31,8 @@
 .
 
 # 🎯 Objetivos de la Práctica
-Implementar arquitecturas de Agentes: Configurar dos instancias de LLM con roles contrapuestos.
+
+* **Implementar arquitecturas de Agentes:** Configurar dos instancias de LLM con roles contrapuestos.
 
 * **Gestión de Contexto:** Utilizar el historial de mensajes de LangChain para mantener la coherencia en diálogos extensos.
 
@@ -173,6 +174,13 @@ Se implementó un esquema en SQLite para la gestión de "Personas". Cada perfil 
             }
         else:
             return None
+
+* **inicializar_bd**	Crea la base de datos y la tabla inicial.
+
+* **insertar_perfil**	Agrega un nuevo cliente a la lista.
+
+* **obtener_perfil_aleatorio**	Elige un cliente al azar para trabajar con él.
+
 # **3. Clase SimuladorCliente**
 
         class SimuladorCliente:
@@ -220,7 +228,38 @@ Se implementó un esquema en SQLite para la gestión de "Personas". Cada perfil 
         }
         comentario = comentarios[puntuacion]
         return puntuacion, comentario
+        
+**1. El Nacimiento del Cliente (__init__)**
+* Cuando creas un simulador, le das un perfil (como los que vimos en la base de datos anterior).
 
+* Configura el cerebro de la IA (modelo Gemini 2.5 Flash).
+
+* Le asigna una personalidad y un historial vacío para recordar qué se ha dicho durante la conversación.
+
+**2. La "Máscara" del Personaje (_crear_prompt_sistema)**
+Este método es el que le da las instrucciones secretas a la IA. Le dice: "Olvida que eres un programa, ahora eres un cliente de Ecuador".
+
+* Usa los datos del perfil (tono, ubicación, conocimiento) para que la IA sepa si debe ser amable, estar enojada o si sabe mucho de tecnología.
+* Incluso le pide que use modismos ecuatorianos (como "vaya", "chévere", "ya pues").
+
+**3. El Motor de Diálogo (generar_respuesta)**
+Es el corazón del código. Funciona siguiendo estos pasos:
+
+* Carga las reglas: Empieza con las instrucciones del personaje.
+
+* Memoria: Revisa el historial para no repetir lo mismo y llevar el hilo.
+
+* Escucha al bot: Si el bot del servicio técnico respondió algo, la IA lo lee.
+
+* Habla: Envía todo a Gemini y genera una respuesta coherente con su personalidad.
+
+* Guarda: Anota lo que dijo en el historial.
+  
+**4. La Encuesta de Satisfacción (evaluar_bot)**
+* Una vez que termina la charla, este método simula la calificación que dejaría el cliente.
+Nota: En esta versión actual, la puntuación es al azar (del 1 al 5).
+
+* Dependiendo del número que salga, devuelve un comentario predefinido (desde "servicio muy malo" hasta "excelente servicio").
 # **4. Clase BotSoporte**
 
     class BotSoporte:
@@ -248,6 +287,30 @@ Se implementó un esquema en SQLite para la gestión de "Personas". Cada perfil 
         self.historial.append(HumanMessage(content=f"Bot: {respuesta.content}"))
         return respuesta.content
         
+**1. Preparación del Agente (__init__)**
+* Cuando el bot "se conecta" por primera vez:Configura su cerebro con Gemini 2.5 Flash.
+* Usa una temperature=0.5. Esto significa que sus respuestas serán más precisas y menos creativas que las del cliente (que tenía 0.7), lo cual es ideal para un agente que debe dar soluciones técnicas y no inventar cosas.
+* Prepara su propia "memoria" (historial) para saber qué le ha dicho el cliente antes.
+
+**2. El Manual de Procedimientos (_crear_prompt_sistema)**
+Aquí se definen las reglas de comportamiento del trabajador:
+
+* Identidad, Misión,Estilo: (Debe ser empático, claro y profesional (nada de modismos informales aquí, a menos que el cliente lo requiera)). * Cierre:
+
+
+**3. La Atención al Cliente (generar_respuesta)**
+Este es el proceso que sigue el bot cada vez que recibe un mensaje:
+
+* **Contexto:** Carga primero su "manual de procedimientos" (el prompt del sistema).
+
+* **Recuerdos:** Revisa lo que se ha hablado antes en la sesión actual.
+
+* **Escucha activa:** Recibe el mensaje que le acaba de enviar el simulador de cliente.
+
+* **Procesamiento:** Le envía todo el paquete de información a Gemini para obtener una respuesta adecuada.
+
+* **Registro:** Guarda lo que respondió en su historial para no perder el hilo de la conversación.  
+
 # **5. Ejecución de la Simulación**
 
     def ejecutar_demo():
