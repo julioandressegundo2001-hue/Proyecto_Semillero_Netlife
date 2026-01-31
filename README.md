@@ -28,19 +28,28 @@
 
 **10) Vargas Sanchez Stiven Alexander**
 
-# **📋 Tabla de Contenidos:**
+.
 
-**Descripción General**
+# 🎯 Objetivos de la Práctica
+Implementar arquitecturas de Agentes: Configurar dos instancias de LLM con roles contrapuestos.
 
-**Características Principales**
+* **Gestión de Contexto:** Utilizar el historial de mensajes de LangChain para mantener la coherencia en diálogos extensos.
 
-**Arquitectura del Sistema**
+* **Persistencia de Datos:** Integrar SQLite para parametrizar el comportamiento de los agentes.
 
-**Instalación y Configuración**
+* **Evaluación Sintética:** Generar métricas de satisfacción (CSAT) basadas en el razonamiento de la IA.
 
-**Uso**
+# 💻 Tecnologías Utilizadas
 
-**Tecnologías Utilizadas** 
+**Core**: Python 3.x
+
+**IA Orchestrator:** LangChain (Core, Google GenAI)
+
+**LLM:** Google Gemini 1.5/2.0 Flash
+
+**Database:** SQLite3
+
+**Environment:** OS Environment Variables para gestión de API Keys.
 
 # 🛠️ Arquitectura y Componentes Técnicos
 **1. Motor de Inteligencia Artificial**
